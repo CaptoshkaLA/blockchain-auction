@@ -37,7 +37,7 @@ func (c *Controller) GetBlockChain(writer http.ResponseWriter, request *http.Req
 	writer.Header().Set("Access-Control-Allow-Origin", "*")
 	writer.WriteHeader(http.StatusOK)
 
-	data, _ := json.Marshal(c.blockChain)
+	data, _ := json.Marshal(c.BlockChain)
 
 	writer.Write(data)
 	return
@@ -46,19 +46,19 @@ func (c *Controller) GetBlockChain(writer http.ResponseWriter, request *http.Req
 // Mine GET /mine
 func (c *Controller) Mine(writer http.ResponseWriter, request *http.Request) {
 	// Get hash of the last block in the blockchain
-	var lastBlock Block = c.blockChain.GetLastBlock()
+	var lastBlock Block = c.BlockChain.GetLastBlock()
 	var lastBlockHash string = lastBlock.Hash
 
-	var newBlockData BlockData = BlockData{strconv.Itoa(lastBlock.BlockId), c.blockChain.PendingBids}
+	var newBlockData BlockData = BlockData{strconv.Itoa(lastBlock.BlockId), c.BlockChain.PendingBids}
 	var newBlockDataAsBinary, _ = json.Marshal(newBlockData)
 	var newBlockDataAsString = base64.URLEncoding.EncodeToString(newBlockDataAsBinary)
 
 	// We now have both items required for proof of work. Run proof of work to get nonce
-	var nonce int = c.blockChain.ProofOfWork(lastBlockHash, newBlockDataAsString)
+	var nonce int = c.BlockChain.ProofOfWork(lastBlockHash, newBlockDataAsString)
 
 	// Now that we have the nonce, to create a new block we also need a hash for the new block
-	var hash = c.blockChain.HashBlock(lastBlockHash, newBlockDataAsString, nonce)
-	var newBlock Block = c.blockChain.CreateNewBlock(nonce, lastBlockHash, hash)
+	var hash = c.BlockChain.HashBlock(lastBlockHash, newBlockDataAsString, nonce)
+	var newBlock Block = c.BlockChain.CreateNewBlock(nonce, lastBlockHash, hash)
 
 	// We have a new block! Broadcast it to all nodes (call ReceiveNewBlock on all nodes)
 	blockToBroadcast, _ := json.Marshal(newBlock)
@@ -85,9 +85,9 @@ func (c *Controller) ReceiveNewBlock(writer http.ResponseWriter, request *http.R
 	// Process new block: if validated, add to the blockchain
 	var message string = "New block has been rejected"
 	var statusCode int = http.StatusInternalServerError
-	if c.blockChain.CheckNewBlockHash(newBlock) {
-		c.blockChain.PendingBids = Bids{}
-		c.blockChain.ChainOfBlocks = append(c.blockChain.ChainOfBlocks, newBlock)
+	if c.BlockChain.CheckNewBlockHash(newBlock) {
+		c.BlockChain.PendingBids = Bids{}
+		c.BlockChain.ChainOfBlocks = append(c.BlockChain.ChainOfBlocks, newBlock)
 		message = "New block received and accepted"
 		statusCode = http.StatusOK
 	}
@@ -125,7 +125,7 @@ func (c *Controller) RegisterAndBroadcastNode(writer http.ResponseWriter, reques
 	}
 
 	// We now have the value of the new node. Add it to our list of known nodes
-	if c.blockChain.RegisterNode(newNode.Url) {
+	if c.BlockChain.RegisterNode(newNode.Url) {
 		log.Printf("Node '%v' is already registered. Ignoring request", newNode.Url)
 		writer.WriteHeader(http.StatusOK)
 		return
@@ -136,13 +136,13 @@ func (c *Controller) RegisterAndBroadcastNode(writer http.ResponseWriter, reques
 	c.broadcastToAllNodes("/register-node", body)
 
 	// Get a list of our  known nodes and send back to the new node
-	knownNodes := make([]string, len(c.blockChain.NetworkNodes))
+	knownNodes := make([]string, len(c.BlockChain.NetworkNodes))
 	i := 0
-	for node, _ := range c.blockChain.NetworkNodes {
+	for node, _ := range c.BlockChain.NetworkNodes {
 		knownNodes[i] = node
 		i++
 	}
-	knownNodes[i] = c.currentNodeUrl
+	knownNodes[i] = c.CurrentNodeUrl
 	payload, _ := json.Marshal(knownNodes)
 	doPostCall(newNode.Url+"/register-nodes-bulk", payload)
 
@@ -171,7 +171,7 @@ func (c *Controller) RegisterNode(writer http.ResponseWriter, request *http.Requ
 		return
 	}
 
-	isRegistered := c.blockChain.RegisterNode(newNode.Url)
+	isRegistered := c.BlockChain.RegisterNode(newNode.Url)
 	var statusMessage string
 	if isRegistered {
 		statusMessage = fmt.Sprintf("Node %s was registereded sucessfully", newNode.Url)
@@ -205,8 +205,8 @@ func (c *Controller) RegisterNodesBulk(writer http.ResponseWriter, request *http
 	}
 
 	for _, node := range nodes {
-		if node != c.currentNodeUrl {
-			c.blockChain.RegisterNode(node)
+		if node != c.CurrentNodeUrl {
+			c.BlockChain.RegisterNode(node)
 		}
 	}
 
@@ -236,9 +236,9 @@ func (c *Controller) Consensus(writer http.ResponseWriter, request *http.Request
 
 	// Iterate over all nodes, getting each node's blockchain and measuring its length
 	// to identify the longest chain
-	for key, _ := range c.blockChain.NetworkNodes {
+	for key, _ := range c.BlockChain.NetworkNodes {
 		// Ignore this node
-		if key == c.currentNodeUrl {
+		if key == c.CurrentNodeUrl {
 			continue
 		}
 
@@ -282,8 +282,8 @@ func (c *Controller) Consensus(writer http.ResponseWriter, request *http.Request
 
 /* Helpers */
 func (c *Controller) broadcastToAllNodes(api string, body []byte) {
-	for key, _ := range c.blockChain.NetworkNodes {
-		if key != c.currentNodeUrl {
+	for key, _ := range c.BlockChain.NetworkNodes {
+		if key != c.CurrentNodeUrl {
 			doPostCall(key+api, body)
 		}
 	}
@@ -351,7 +351,7 @@ func (c *Controller) registerBidImp(writer http.ResponseWriter, request *http.Re
 	}
 
 	// We have a Bid object. Register it in the blockchain
-	c.blockChain.RegisterBid(bid)
+	c.BlockChain.RegisterBid(bid)
 
 	// Broadcast to all other available nodes
 	if shouldBroadCast {
