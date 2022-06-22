@@ -304,3 +304,60 @@ func doPostCall(url string, body []byte) error {
 	response.Body.Close()
 	return nil
 }
+
+// RegisterAndBroadcastBid POST /bid/broadcast register a bid
+/* Register a bid in current blockchain and transmit to all nodes in the network. Typical body input
+   {
+   	"bidder_name": "Anton",
+   	"auction_id": 1,
+   	"bid_value": "100.5"
+   }
+*/
+func (c *Controller) RegisterAndBroadcastBid(writer http.ResponseWriter, request *http.Request) {
+	c.registerBidImp(writer, request, true) // Broadcast
+}
+
+// RegisterBid POST /bid
+/* This method registers an API bid locally but does not transmit it. Typical body input:
+   {
+   	"bidder_name": "Anton",
+   	"auction_id": 1,
+   	"bid_value": "100.5"
+   }
+*/
+func (c *Controller) RegisterBid(writer http.ResponseWriter, request *http.Request) {
+	c.registerBidImp(writer, request, false) // Do not broadcast
+}
+
+// Creates a Bid object from the body and adds the bid to the blockchain. The bid is conditionally
+// broadcast to all other registered nodes
+func (c *Controller) registerBidImp(writer http.ResponseWriter, request *http.Request, shouldBroadCast bool) {
+	// Read body from request and check for errors
+	defer request.Body.Close()
+	body, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		log.Printf("RegisterAndBroadcastBid error: %s", err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Parse the bid (in json) and convert to Bid object
+	var bid Bid
+	err = json.Unmarshal(body, &bid)
+	if err != nil {
+		log.Printf("RegisterAndBroadcastBid error: %s", err)
+		writer.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
+
+	// We have a Bid object. Register it in the blockchain
+	c.blockChain.RegisterBid(bid)
+
+	// Broadcast to all other available nodes
+	if shouldBroadCast {
+		c.broadcastToAllNodes("/bid", body)
+	}
+
+	// Return success to caller
+	sendStandardResponse(writer, http.StatusCreated, "RegisterAndBroadcastBid", "Bid created and broadcast successfully")
+}
