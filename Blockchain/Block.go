@@ -1,4 +1,4 @@
-package Model
+package Blockchain
 
 /*
 	Block is a classic part of blockchain

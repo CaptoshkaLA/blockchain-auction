@@ -1,4 +1,4 @@
-package Model
+package Blockchain
 
 /*
 	Bid implements information about bid

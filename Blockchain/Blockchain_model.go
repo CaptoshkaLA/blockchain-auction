@@ -1,4 +1,4 @@
-package Model
+package Blockchain
 
 /*
 	BlockChain is a classic implementation includes chain of blocks, bids and nodes in network
