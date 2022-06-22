@@ -4,7 +4,7 @@ package Blockchain
 	NewNode contains json information about the new node
 */
 type NewNode struct {
-	url string `json:"new_node_url"`
+	Url string `json:"new_node_url"`
 }
 
 /*

@@ -1,4 +1,4 @@
-package Model
+package Router
 
 import (
 	"net/http"
