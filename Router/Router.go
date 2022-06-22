@@ -3,6 +3,10 @@ package Router
 import (
 	. "Auction/Blockchain"
 	. "Auction/Controller"
+	"github.com/gorilla/mux"
+	"log"
+	"net/http"
+	"time"
 )
 
 /*
@@ -93,4 +97,32 @@ var routes []Route = []Route{
 		Path:        "/player/{playerId}",
 		HandlerFunc: controller.GetBidsForPlayer,
 	},
+}
+
+func NewRouter(port string) *mux.Router {
+	// Initialize a controller object that holds the blockchain and the url
+	// of the node on which this controller  is running
+	controller.CurrentNodeUrl = "http://localhost" + port
+	controller.BlockChain.CreateNewBlock(100, "0", "0") // genesis block
+
+	var router *mux.Router = mux.NewRouter().StrictSlash(true)
+
+	for _, route := range routes {
+		router.
+			Methods(route.Method).
+			Path(route.Path).
+			Handler(route.HandlerFunc).
+			Name(route.Name)
+	}
+
+	router.Use(func(handler http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			start := time.Now()
+			handler.ServeHTTP(writer, request)
+			log.Printf("[%s] [%s] [Ellapsed: %s]", request.Method, request.RequestURI, time.Since(start))
+		})
+	})
+
+	// Return the fully configured router
+	return router
 }
