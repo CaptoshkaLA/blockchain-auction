@@ -361,3 +361,18 @@ func (c *Controller) registerBidImp(writer http.ResponseWriter, request *http.Re
 	// Return success to caller
 	sendStandardResponse(writer, http.StatusCreated, "RegisterAndBroadcastBid", "Bid created and broadcast successfully")
 }
+
+// Index GET/
+func (c *Controller) Index(writer http.ResponseWriter, request *http.Request) {
+
+}
+
+// GetBidsForAuction GET /auction/{auctionId} retrieves all bids for an auction
+func (c *Controller) GetBidsForAuction(writer http.ResponseWriter, request *http.Request) {
+
+}
+
+// GetBidsForPlayer GET /player/{playerId}
+func (c *Controller) GetBidsForPlayer(writer http.ResponseWriter, request *http.Request) {
+
+}
