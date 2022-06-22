@@ -1,4 +1,4 @@
-package Model
+package Blockchain
 
 /*
 	NewNode contains json information about the new node
