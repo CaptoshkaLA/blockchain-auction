@@ -85,3 +85,15 @@ func (b *BlockChain) CheckNewBlockHash(newBlock Block) bool {
 	return lastBlock.Hash == newBlock.PreviousBlockHash &&
 		lastBlock.BlockId == newBlock.BlockId-1
 }
+
+func (b *BlockChain) ChainIsValid() bool {
+	panic("not implemented")
+}
+
+func (b *BlockChain) GetBidsForAuction(auctionId string) Bids {
+	panic("not implemented")
+}
+
+func (b *BlockChain) GetBidsForPlayer(playerId string) Bids {
+	panic("not implemented")
+}
