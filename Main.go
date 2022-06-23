@@ -1,7 +1,7 @@
-package Auction
+package main
 
 import (
-	. "Auction/Router"
+	. "Auction/Controller/Router"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"log"

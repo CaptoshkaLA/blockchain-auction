@@ -2,7 +2,7 @@ package Router
 
 import (
 	. "Auction/Blockchain"
-	. "Auction/Controller"
+	. "Auction/Controller/Model"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"

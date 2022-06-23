@@ -1,8 +1,7 @@
-package Controller
+package Model
 
 import (
 	. "Auction/Blockchain"
-	. "Auction/Router"
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
